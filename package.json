@@ -1,0 +1,66 @@
+{
+  "name": "@sapientpro/typeorm-eager-load",
+  "version": "0.0.3",
+  "description": "TypeORM Eager Loader is a package that provides a simple way to optimize database queries by eagerly loading data based on defined relations",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "author": {
+    "name": "Dmyto Kulyk",
+    "email": "dmytro.kulyk@sapient.prom"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sapientpro/typeorm-eager-load.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sapientpro/typeorm-eager-load/issues"
+  },
+  "homepage": "https://github.com/sapientpro/typeorm-eager-load",
+  "tags": [
+    "orm",
+    "typescript",
+    "typeorm",
+    "eager-load"
+  ],
+  "engines": {
+    "node": ">= 12.9.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "node": {
+        "require": "./dist/index.js",
+        "types": "./dist/index.d.ts"
+      }
+    }
+ },
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "scripts": {
+    "compile": "rimraf ./dist && tsc",
+    "watch": "./node_modules/.bin/tsc -w",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 2"
+  },
+  "devDependencies": {
+    "@types/node": "^18.13.0",
+    "conventional-changelog-angular": "^5.0.13",
+    "conventional-changelog-cli": "^2.2.2",
+    "rimraf": "^4.4.1",
+    "typeorm": "^0.3.12",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "tslib": "^2.5.0"
+  },
+  "peerDependencies": {
+    "typeorm": "^0.3.12 || ^0.2.29"
+  },
+  "peerDependenciesMeta": {
+    "typeorm": {
+      "optional": false
+    }
+  },
+  "files": [
+    "dist"
+  ]
+}
