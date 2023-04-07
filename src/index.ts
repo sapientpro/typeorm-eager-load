@@ -70,7 +70,9 @@ function groupBy<T extends { [key: string]: any }>(entities: T[], field: string 
   return groups;
 }
 
-export async function eagerLoad<Entity extends { [key: string]: any }>(entities: Entity[] | Entity | undefined | null, relations: RelationDefinitions, entityManager?: EntityManager, entity?: any) {
+export async function eagerLoad<Entity extends {
+  [key: string]: any
+}>(entities: Entity[] | Entity | undefined | null, relations: RelationDefinitions, entityManager?: EntityManager, entity?: any) {
   if (!entities) return;
 
   entities = Array.isArray(entities) ? entities : [entities];
@@ -167,9 +169,10 @@ export async function eagerLoad<Entity extends { [key: string]: any }>(entities:
       },
     });
 
-    const entityIds = filteredEntities.reduce((set, entity) => set.add(entity[referencedColumnName]), new Set<number | string | null | undefined>());
+    let entityIds;
 
     if (lateral) {
+      entityIds = new Set(filteredEntities.map((entity) => entity[meta.primaryColumns[0].propertyName]));
       const aliases = [...builder.expressionMap.aliases],
         outerAlias = builder.expressionMap.createAlias({
           name: lateralAlias!,
@@ -178,10 +181,10 @@ export async function eagerLoad<Entity extends { [key: string]: any }>(entities:
           tablePath: meta.tablePath,
         });
       builder.expressionMap.aliases = [outerAlias, ...aliases];
-      builder.andWhere(`${outerAlias.name}.${referencedColumn.databaseName} IN (:...entityIds)`, {entityIds: [...entityIds]});
+      builder.andWhere(`${outerAlias.name}.${meta.primaryColumns[0].databaseName} IN (:...entityIds)`, {entityIds: [...entityIds]});
 
       const preLateralBuilder = repository.createQueryBuilder(relationName)
-        .select('*');
+        .select(`${relationName}.*`);
 
       const lateralBuilder = lateral(preLateralBuilder, outerAlias.name) ?? preLateralBuilder;
       lateralBuilder.expressionMap.createAlias({
@@ -189,7 +192,7 @@ export async function eagerLoad<Entity extends { [key: string]: any }>(entities:
         type: 'from',
         target: meta.target,
       });
-      lateralBuilder.andWhere(`${field} = ${outerAlias.name}.${referencedColumn.databaseName}`);
+      lateralBuilder.andWhere(`${field} = ${outerAlias.name}.${referencedColumnName}`);
 
       if (Object.keys(lateralBuilder.expressionMap.allOrderBys).length !== 0 && lateralBuilder.expressionMap.limit !== 1) {
         //store the order bys in a subquery
@@ -201,6 +204,7 @@ export async function eagerLoad<Entity extends { [key: string]: any }>(entities:
       builder.setParameters(lateralBuilder.getParameters());
 
     } else {
+      entityIds = new Set(filteredEntities.map((entity) => entity[referencedColumnName]));
       builder.andWhere(`${field} IN (:...entityIds)`, {entityIds: [...entityIds]});
     }
 
