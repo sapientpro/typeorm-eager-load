@@ -1,4 +1,5 @@
 TypeORM Eager Loader
+[![NPM Package](https://img.shields.io/npm/v/@sapientpro/typeorm-eager-load.svg)](https://www.npmjs.org/package/@sapientpro/typeorm-eager-load)
 ================
 
 The eagerLoad function allows you to load entity relations in a separate query with eager selects for all related entities over an IN operator. It provides an alternative to the default lazy loading behavior of TypeORM, which loads relations with multiple queries.
