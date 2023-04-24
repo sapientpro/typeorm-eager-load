@@ -1,3 +1,12 @@
+## 0.0.7 (2023-04-24)
+
+
+### Features
+
+* Added export of types ([d2faf58](https://github.com/sapientpro/typeorm-eager-load/commit/d2faf58089b77e6e8afa5f9ab42b62582dce9374))
+
+
+
 ## 0.0.5 (2023-04-23)
 
 
