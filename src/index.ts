@@ -1,3 +1,4 @@
+export * from "./types";
 import type { Connection, DataSource, EntityManager, SelectQueryBuilder } from "typeorm";
 import type { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
 import type { RelationMetadata } from "typeorm/metadata/RelationMetadata";
