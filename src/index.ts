@@ -187,12 +187,21 @@ export async function eagerLoad<Entity extends {
       const preLateralBuilder = repository.createQueryBuilder(relationName)
         .select(`${relationName}.*`);
 
-      const lateralBuilder = lateral(preLateralBuilder, outerAlias.name) ?? preLateralBuilder;
-      lateralBuilder.expressionMap.createAlias({
+      preLateralBuilder.expressionMap.createAlias({
         name: outerAlias.name,
         type: 'from',
         target: meta.target,
       });
+
+      const lateralBuilder = lateral(preLateralBuilder, outerAlias.name) ?? preLateralBuilder;
+
+      if (preLateralBuilder !== lateralBuilder) {
+        lateralBuilder.expressionMap.createAlias({
+          name: outerAlias.name,
+          type: 'from',
+          target: meta.target,
+        });
+      }
       lateralBuilder.andWhere(`${field} = ${outerAlias.name}.${referencedColumnName}`);
 
       if (Object.keys(lateralBuilder.expressionMap.allOrderBys).length !== 0 && lateralBuilder.expressionMap.limit !== 1) {
