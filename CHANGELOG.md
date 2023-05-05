@@ -1,3 +1,12 @@
+## [0.0.9](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.8...0.0.9) (2023-05-05)
+
+
+### Features
+
+* Added ability to add additional argument types to EagerLoadClosure ([ef53106](https://github.com/sapientpro/typeorm-eager-load/commit/ef5310647b4e8b55037165164f749c9d26d00e02))
+
+
+
 ## [0.0.8](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.7...0.0.8) (2023-05-04)
 
 
