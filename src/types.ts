@@ -6,6 +6,9 @@ export type EagerContext = {
   filter: (callback: ((entity: any) => any)) => unknown;
   lateral: (callback: LateralCallback, alias?: string) => void;
 }
-export type EagerLoadClosure = (builder: SelectQueryBuilder<any>, context: EagerContext) => void;
-export type RelationObjectDefinition = { [key: string]: EagerLoadClosure | undefined };
-export type RelationDefinitions = string | (string | RelationDefinitions)[] | RelationObjectDefinition;
+export type EagerLoadClosure<Args extends any[] = []> = (builder: SelectQueryBuilder<any>, context: EagerContext, ...args: Args) => void;
+export type RelationObjectDefinition<Args extends any[] = []> = { [key: string]: EagerLoadClosure<Args> | undefined };
+export type RelationDefinitions<Args extends any[] = []> =
+  string
+  | (string | RelationDefinitions<Args>)[]
+  | RelationObjectDefinition<Args>;
