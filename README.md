@@ -13,7 +13,7 @@ Install the package using npm:
 npm install @sapientpro/typeorm-eager-load --save
 ```
 
-Install the package using npm:
+Install the package using yarn:
 ```
 yarn add @sapientpro/typeorm-eager-load
 ```
@@ -117,7 +117,7 @@ await eagerLoad(posts, [
 Contributions are welcome! If you have any bug reports, feature requests, or patches, please [open an issue](https://github.com/sapientpro/typeorm-eager-loader/issues) or create a [pull request](https://github.com/sapientpro/typeorm-eager-loader/pulls).
 
 ## License
-This package is licensed under the [MIT License](https://github.com/sapientpro/typeorm-eager-loader/blob/master/LICENSE).
+This package is licensed under the [MIT License](https://github.com/sapientpro/typeorm-eager-loader/blob/main/LICENSE).
 
 
 
