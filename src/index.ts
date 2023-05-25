@@ -29,7 +29,7 @@ export function flatRelations<Args extends any[] = []>(relations: RelationDefini
     return {[relations]: undefined};
   }
   if (Array.isArray(relations)) {
-    return relations.reduce((relations: RelationObjectDefinition<Args>, item:RelationDefinitions<Args>) => Object.assign(relations, flatRelations(item)), {});
+    return relations.reduce((relations: RelationObjectDefinition<Args>, item: RelationDefinitions<Args>) => Object.assign(relations, flatRelations(item)), {});
   }
   return relations;
 }
@@ -104,8 +104,8 @@ export async function eagerLoad<Entity extends {
     const manager = entityManager ?? eagerDataSource.createEntityManager(),
       repository = manager.getRepository<Entity>(relation.type);
 
+    let multi = relation.isOneToMany || relation.isManyToMany
     const
-      multi = relation.isOneToMany || relation.isManyToMany,
       builder = repository.createQueryBuilder(relationName);
     let targetRelation = relation, inverse = false;
     let referenceName: string | void;
@@ -157,6 +157,7 @@ export async function eagerLoad<Entity extends {
     let filteredEntities = (entities as Entity[]);
     let lateral: LateralCallback | undefined;
     let lateralAlias: string;
+    let raw: boolean = false;
     const field = where(builder, closure || (() => void 0), {
       loadWith: (loadWith: RelationDefinitions) => {
         additionalRelations.push(loadWith);
@@ -168,6 +169,10 @@ export async function eagerLoad<Entity extends {
         lateral = callback;
         lateralAlias = alias;
       },
+      loadRaw: (newMulti?: boolean) => {
+        multi = newMulti ?? multi;
+        raw = true;
+      }
     });
 
     let entityIds;
@@ -248,14 +253,17 @@ export async function eagerLoad<Entity extends {
 
     entityIds.delete(null);
     entityIds.delete(undefined);
-    const models = entityIds.size ? await builder.getMany() : [];
+    const models = entityIds.size
+      ? await (raw ? builder.getRawMany() : builder.getMany())
+      : [];
     const dictionary = groupBy(models, groupClosure ?? columnName);
 
     filteredEntities.forEach((entity) => {
       const models = dictionary[entity[referencedColumnName]] || [];
       Object.assign(entity, {[alias]: multi ? models : models[0] || null});
     });
-    await eagerLoad(models, additionalRelations, entityManager);
+
+    await eagerLoad(models, additionalRelations, entityManager, relation.type);
 
     return entities;
   }));
