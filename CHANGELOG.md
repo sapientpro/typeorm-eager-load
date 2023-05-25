@@ -1,3 +1,12 @@
+## [0.0.10](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.9...0.0.10) (2023-05-25)
+
+
+### Features
+
+* Added support of raw results from relations ([9562a3c](https://github.com/sapientpro/typeorm-eager-load/commit/9562a3cf25848aa69897560cb39d61e6c8710223))
+
+
+
 ## [0.0.9](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.8...0.0.9) (2023-05-05)
 
 
