@@ -1,14 +1,14 @@
-export * from "./types";
-import type { Connection, DataSource, EntityManager, SelectQueryBuilder } from "typeorm";
-import type { ColumnMetadata } from "typeorm/metadata/ColumnMetadata";
-import type { RelationMetadata } from "typeorm/metadata/RelationMetadata";
+export * from './types';
+import type { Connection, DataSource, EntityManager, ObjectLiteral, SelectQueryBuilder } from 'typeorm';
+import type { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
+import type { RelationMetadata } from 'typeorm/metadata/RelationMetadata';
 import type {
   EagerContext,
   EagerLoadClosure,
   LateralCallback,
   RelationDefinitions,
-  RelationObjectDefinition
-} from "./types";
+  RelationObjectDefinition,
+} from './types';
 
 let eagerDataSource: DataSource | Connection;
 type ParsedRelations = {
@@ -40,7 +40,7 @@ function parseRelations(relations: RelationDefinitions): ParsedRelations {
       relation,
       alias = relation as string,
       other,
-      modifier
+      modifier,
     }: { relation?: string, alias?: string, other?: string, modifier?: string }
       = relationDefinition.match(/^(?:(?<alias>[^:.]+):)?(?<relation>[^.:]+?)(?<modifier>[-+#])?(?:\.(?<other>.*))?$/)?.groups || {};
     if (!relation) {
@@ -60,15 +60,66 @@ function parseRelations(relations: RelationDefinitions): ParsedRelations {
   }, {} as ParsedRelations);
 }
 
-function groupBy<T extends { [key: string]: any }>(entities: T[], field: string | ((entity: T) => any)) {
-  const groups: { [key: string]: T[] } = {};
+function groupBy<T extends { [key: string]: any }>(entities: T[], fields: string[], isJunction = false): Map<any, any> {
+  console.log(isJunction, fields, entities.length);
+  const groups = new Map<any, any>();
+
+  function setEntity(obj: Record<string, any>, entity: T) {
+    const m = fields.reduce((m, field, index) => {
+      if (!m) return;
+      const value = obj[field];
+      if (value === undefined || value === null) return;
+      if (!m.has(value)) {
+        let newMap = index == fields.length - 1 ? <Array<T>>[] : new Map<any, any>();
+        m.set(value, newMap);
+        return newMap;
+      }
+      return m.get(value);
+    }, groups) as unknown as Array<T>;
+
+    if (m) m.push(entity);
+  }
+
   entities.forEach((entity) => {
-    const value = field instanceof Function ? field(entity) : entity[field];
-    (Array.isArray(value) ? value : [value]).forEach((value) => {
-      groups.hasOwnProperty(value) ? groups[value].push(entity) : groups[value] = [entity];
-    });
+    if (isJunction) {
+      entity.junctions.forEach((obj: any) => {
+        setEntity(obj, entity);
+      });
+      delete entity.junctions;
+    } else {
+      setEntity(entity, entity);
+    }
   });
+  console.log(groups);
   return groups;
+}
+
+function extractIds<Entity extends ObjectLiteral>(entities: Entity[], columnNames: string[]) {
+  const entityIds: Array<any[]> = [];
+  const map = new Map<any, any>();
+  entities.forEach((entity) => {
+    let m = map;
+    const id = [];
+    let add = true;
+    for (let columnName of columnNames) {
+      const value = entity[columnName];
+      if (value === undefined || value === null) return;
+      id.push(value);
+      if (m.has(value)) {
+        m = m.get(value);
+      } else {
+        add = true;
+        const newMap = new Map<any, any>();
+        m.set(value, newMap);
+        m = newMap;
+      }
+    }
+    if (add) {
+      entityIds.push(id);
+    }
+  });
+
+  return entityIds;
 }
 
 export async function eagerLoad<Entity extends {
@@ -87,7 +138,7 @@ export async function eagerLoad<Entity extends {
     closure,
     relations,
     relation: relationName,
-    modifier
+    modifier,
   }]) => {
     const relation = meta.findRelationWithPropertyPath(relationName);
 
@@ -104,15 +155,15 @@ export async function eagerLoad<Entity extends {
     const manager = entityManager ?? eagerDataSource.createEntityManager(),
       repository = manager.getRepository<Entity>(relation.type);
 
-    let multi = relation.isOneToMany || relation.isManyToMany
+    let multi = relation.isOneToMany || relation.isManyToMany;
     const
       builder = repository.createQueryBuilder(relationName);
     let targetRelation = relation, inverse = false;
-    let referenceName: string | void;
     let where = (builder: SelectQueryBuilder<any>, closure: EagerLoadClosure, context: EagerContext) => (
-      closure(builder, context), `${builder.alias}.${columnName}`
+      closure(builder, context), columnNames.map(columnName => `${builder.alias}.${columnName}`)
     );
-    let groupClosure: any;
+
+    let isJunction = false;
 
     switch (relation.relationType) {
       case 'many-to-one':
@@ -130,35 +181,43 @@ export async function eagerLoad<Entity extends {
         }
         break;
       case 'many-to-many': {
+        isJunction = true;
         inverse = true;
-        referenceName = (relation.inverseJoinColumns[0].referencedColumn as ColumnMetadata).propertyName;
-        const relatedName = relation.joinColumns[0].databaseName;
-        where = (builder: SelectQueryBuilder<Entity>, closure: EagerLoadClosure, context: EagerContext) => (closure(builder.innerJoinAndMapMany(
-            `${relationName}.junction`, relation.joinTableName, 'junction',
-            `junction.${relation.inverseJoinColumns[0].databaseName} = ${relationName}.${referenceName}`,
-          ), context), `junction.${relatedName}`
-        );
-        groupClosure = (entity: { junction?: Record<string, any>[] }) => {
-          const values = entity.junction!.map(entity => entity[relatedName]);
-          delete entity.junction;
-          return values;
+        where = (builder: SelectQueryBuilder<Entity>, closure: EagerLoadClosure, context: EagerContext) => {
+          const condition = relation.inverseJoinColumns.map((a) => `junctions.${a.databaseName} = ${relationName}.${(a.referencedColumn as ColumnMetadata).propertyName}`).join(' AND ');
+          closure(
+            builder.innerJoinAndMapMany(`${relationName}.junctions`, relation.joinTableName, 'junctions', condition),
+            context,
+          );
+          const j = builder.expressionMap.aliases[builder.expressionMap.aliases.length - 1];
+          j.metadata.columns.forEach((a) => a.isVirtual = false);
+          return relation.joinColumns.map(({databaseName}) => `junctions.${databaseName}`);
         };
         break;
       }
       default:
         throw new Error(`Relation ${relation?.relationType} not implemented yet`);
     }
-    const
-      joinColumn = targetRelation.joinColumns[0],
-      referencedColumn = <typeof joinColumn>joinColumn.referencedColumn,
-      [referencedColumnName, columnName] = inverse ? [referencedColumn.propertyName, joinColumn.propertyName] : [joinColumn.propertyName, referencedColumn.propertyName];
+    const referencedColumnNames: string[] = [];
+    const columnNames: string[] = [];
+    targetRelation.joinColumns.forEach((joinColumn) => {
+      const referencedColumn = <typeof joinColumn>joinColumn.referencedColumn;
+      if (inverse) {
+        referencedColumnNames.push(referencedColumn.propertyName);
+        columnNames.push(joinColumn.propertyName);
+      } else {
+        referencedColumnNames.push(joinColumn.propertyName);
+        columnNames.push(referencedColumn.propertyName);
+      }
+    });
 
     const additionalRelations: RelationDefinitions[] = [relations];
     let filteredEntities = (entities as Entity[]);
     let lateral: LateralCallback | undefined;
+    // @ts-ignore
     let lateralAlias: string;
     let raw: boolean = false;
-    const field = where(builder, closure || (() => void 0), {
+    const fields = where(builder, closure || (() => void 0), {
       loadWith: (loadWith: RelationDefinitions) => {
         additionalRelations.push(loadWith);
       },
@@ -172,13 +231,14 @@ export async function eagerLoad<Entity extends {
       loadRaw: (newMulti?: boolean) => {
         multi = newMulti ?? multi;
         raw = true;
-      }
+      },
     });
 
-    let entityIds;
+    let entityIds: Array<any[]>
 
     if (lateral) {
-      entityIds = new Set(filteredEntities.map((entity) => entity[meta.primaryColumns[0].propertyName]));
+      const columnNames = meta.primaryColumns.map(({propertyName}) => propertyName);
+      entityIds = extractIds(filteredEntities, columnNames);
       const aliases = [...builder.expressionMap.aliases],
         outerAlias = builder.expressionMap.createAlias({
           name: lateralAlias!,
@@ -187,7 +247,8 @@ export async function eagerLoad<Entity extends {
           tablePath: meta.tablePath,
         });
       builder.expressionMap.aliases = [outerAlias, ...aliases];
-      builder.andWhere(`${outerAlias.name}.${meta.primaryColumns[0].databaseName} IN (:...entityIds)`, {entityIds: [...entityIds]});
+
+      builder.andWhere(`(${columnNames.map(columnName => `${outerAlias.name}.${columnName}`).join(', ')}) IN (${entityIds.map(ids => `(${ids.join(',')})`).join(',')})`);
 
       const preLateralBuilder = repository.createQueryBuilder(relationName)
         .select(`${relationName}.*`);
@@ -207,7 +268,9 @@ export async function eagerLoad<Entity extends {
           target: meta.target,
         });
       }
-      lateralBuilder.andWhere(`${field} = ${outerAlias.name}.${referencedColumnName}`);
+      referencedColumnNames.forEach((columnName, index) => {
+        lateralBuilder.andWhere(`${fields[index]} = ${outerAlias.name}.${columnName}`);
+      });
 
       if (Object.keys(lateralBuilder.expressionMap.allOrderBys).length !== 0 && lateralBuilder.expressionMap.limit !== 1) {
         //store the order bys in a subquery
@@ -219,8 +282,8 @@ export async function eagerLoad<Entity extends {
       builder.setParameters(lateralBuilder.getParameters());
 
     } else {
-      entityIds = new Set(filteredEntities.map((entity) => entity[referencedColumnName]));
-      builder.andWhere(`${field} IN (:...entityIds)`, {entityIds: [...entityIds]});
+      entityIds = extractIds(filteredEntities, referencedColumnNames);
+      builder.andWhere(`(${fields.join(', ')}) IN (${entityIds.map(ids => `(${ids.join(',')})`).join(',')})`);
     }
 
     const checkJoinedRelations = (relation: RelationMetadata, alias: string, relations: RelationDefinitions[]) => {
@@ -237,7 +300,7 @@ export async function eagerLoad<Entity extends {
       Object.entries(parseRelations(relations)).forEach(([relationAlias, {
         relation: relationName,
         relations,
-        modifier
+        modifier,
       }]) => {
         if (modifier === '+') {
           const relation = meta.findRelationWithPropertyPath(relationName)!;
@@ -251,16 +314,16 @@ export async function eagerLoad<Entity extends {
 
     checkJoinedRelations(relation, relationName, additionalRelations);
 
-    entityIds.delete(null);
-    entityIds.delete(undefined);
-    const models = entityIds.size
+    const models = entityIds.length
       ? await (raw ? builder.getRawMany() : builder.getMany())
       : [];
-    const dictionary = groupBy(models, groupClosure ?? columnName);
+
+    console.log(models);
+    const dictionary = groupBy(models, columnNames, isJunction);
 
     filteredEntities.forEach((entity) => {
-      const models = dictionary[entity[referencedColumnName]] || [];
-      Object.assign(entity, {[alias]: multi ? models : models[0] || null});
+      const models = referencedColumnNames.reduce((m, columnName) => m && m.get(entity[columnName]), dictionary) ?? [];
+      Object.assign(entity, {[alias]: multi ? models : (models as unknown as any[])[0] || null});
     });
 
     await eagerLoad(models, additionalRelations, entityManager, relation.type);
