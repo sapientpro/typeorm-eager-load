@@ -61,7 +61,6 @@ function parseRelations(relations: RelationDefinitions): ParsedRelations {
 }
 
 function groupBy<T extends { [key: string]: any }>(entities: T[], fields: string[], isJunction = false): Map<any, any> {
-  console.log(isJunction, fields, entities.length);
   const groups = new Map<any, any>();
 
   function setEntity(obj: Record<string, any>, entity: T) {
@@ -90,7 +89,6 @@ function groupBy<T extends { [key: string]: any }>(entities: T[], fields: string
       setEntity(entity, entity);
     }
   });
-  console.log(groups);
   return groups;
 }
 
@@ -318,7 +316,6 @@ export async function eagerLoad<Entity extends {
       ? await (raw ? builder.getRawMany() : builder.getMany())
       : [];
 
-    console.log(models);
     const dictionary = groupBy(models, columnNames, isJunction);
 
     filteredEntities.forEach((entity) => {
