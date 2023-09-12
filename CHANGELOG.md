@@ -1,3 +1,20 @@
+## [0.0.11-beta.0](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.9...0.0.11-beta.0) (2023-09-12)
+
+
+### Features
+
+* Added support of combined keys ([a5b06ac](https://github.com/sapientpro/typeorm-eager-load/commit/a5b06acd2af3266c637651c69a5b57852bb3d00a))
+
+
+## [0.0.9](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.8...0.0.9) (2023-05-05)
+
+
+### Features
+
+* Added ability to add additional argument types to EagerLoadClosure ([ef53106](https://github.com/sapientpro/typeorm-eager-load/commit/ef5310647b4e8b55037165164f749c9d26d00e02))
+
+
+
 ## [0.0.10](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.9...0.0.10) (2023-05-25)
 
 
