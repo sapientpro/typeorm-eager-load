@@ -98,7 +98,7 @@ function extractIds<Entity extends ObjectLiteral>(entities: Entity[], columnName
   entities.forEach((entity) => {
     let m = map;
     const id = [];
-    let add = true;
+    let add = false;
     for (let columnName of columnNames) {
       const value = entity[columnName];
       if (value === undefined || value === null) return;
@@ -157,9 +157,10 @@ export async function eagerLoad<Entity extends {
     const
       builder = repository.createQueryBuilder(relationName);
     let targetRelation = relation, inverse = false;
-    let where = (builder: SelectQueryBuilder<any>, closure: EagerLoadClosure, context: EagerContext) => (
-      closure(builder, context), columnNames.map(columnName => `${builder.alias}.${columnName}`)
-    );
+    let where = (builder: SelectQueryBuilder<any>, closure: EagerLoadClosure, context: EagerContext) => {
+      closure(builder, context);
+      return columnNames.map(columnName => `${builder.alias}.${columnName}`)
+    };
 
     let isJunction = false;
 
