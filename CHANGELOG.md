@@ -1,3 +1,11 @@
+## [0.0.11-beta.2](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.11-beta.1...0.0.11-beta.2) (2023-09-16)
+
+
+### Bug Fixes
+
+* fixed duplicated related keys ([5151ccb](https://github.com/sapientpro/typeorm-eager-load/commit/5151ccb4a0c3908a9189c2815d74aabe4c6452fd))
+
+
 ## [0.0.11-beta.0](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.9...0.0.11-beta.0) (2023-09-12)
 
 
