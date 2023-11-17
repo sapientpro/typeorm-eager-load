@@ -216,6 +216,7 @@ export async function eagerLoad<Entity extends {
     // @ts-ignore
     let lateralAlias: string;
     let raw: boolean = false;
+    let additonalModels: any[] = [];
     const fields = where(builder, closure || (() => void 0), {
       loadWith: (loadWith: RelationDefinitions) => {
         additionalRelations.push(loadWith);
@@ -231,6 +232,12 @@ export async function eagerLoad<Entity extends {
         multi = newMulti ?? multi;
         raw = true;
       },
+      additionalModels: (models: any[]) => {additonalModels = models.flatMap((model) => {
+        if (!(model instanceof <Function>targetRelation.target)) {
+          throw Error('Invalid model. Must be instance of ' + targetRelation.entityMetadata.name);
+        }
+        return model;
+      })}
     });
 
     let entityIds: Array<any[]>
@@ -324,7 +331,7 @@ export async function eagerLoad<Entity extends {
       Object.assign(entity, {[alias]: multi ? models : (models as unknown as any[])[0] || null});
     });
 
-    await eagerLoad(models, additionalRelations, entityManager, relation.type);
+    await eagerLoad(models.concat(additonalModels), additionalRelations, entityManager, relation.type);
 
     return entities;
   }));
