@@ -1,3 +1,11 @@
+## [0.0.11-beta.3](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.11-beta.2...0.0.11-beta.3) (2023-11-17)
+
+
+### Features
+
+* Added additionalModels to context for deep eager loading ([66242bc](https://github.com/sapientpro/typeorm-eager-load/commit/66242bcbcc59b04ca8a4a62a1b58742705008727))
+
+
 ## [0.0.11-beta.2](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.11-beta.1...0.0.11-beta.2) (2023-09-16)
 
 

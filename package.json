@@ -1,6 +1,6 @@
 {
   "name": "@sapientpro/typeorm-eager-load",
-  "version": "0.0.11-beta.2",
+  "version": "0.0.11-beta.3",
   "description": "TypeORM Eager Loader is a package that provides a simple way to optimize database queries by eagerly loading data based on defined relations",
   "license": "MIT",
   "readmeFilename": "README.md",
