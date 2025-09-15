@@ -1,3 +1,9 @@
+## [0.0.12-beta.4](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.11-beta.3...0.0.12-beta.4) (2025-09-16)
+
+### Bug Fixes
+
+- Used connection from the provided entity manager
+
 ## [0.0.11-beta.3](https://github.com/sapientpro/typeorm-eager-load/compare/0.0.11-beta.2...0.0.11-beta.3) (2023-11-17)
 
 
