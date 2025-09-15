@@ -122,7 +122,7 @@ function extractIds<Entity extends ObjectLiteral>(entities: Entity[], columnName
 
 export async function eagerLoad<Entity extends {
   [key: string]: any
-}>(entities: Entity[] | Entity | undefined | null, relations: RelationDefinitions, entityManager?: EntityManager, entity?: any) {
+}>(entities: Entity[] | Entity | undefined | null, relations: RelationDefinitions, entityManager: EntityManager = eagerDataSource.createEntityManager(), entity?: any) {
   if (!entities) return;
 
   entities = Array.isArray(entities) ? entities : [entities];
@@ -130,7 +130,7 @@ export async function eagerLoad<Entity extends {
 
   const model = entity ?? entities[0].constructor;
 
-  const meta = eagerDataSource.getMetadata(model);
+  const meta = entityManager.connection.getMetadata(model);
 
   await Promise.all(Object.entries(parseRelations(relations)).map(async ([alias, {
     closure,
@@ -150,8 +150,7 @@ export async function eagerLoad<Entity extends {
       return;
     }
 
-    const manager = entityManager ?? eagerDataSource.createEntityManager(),
-      repository = manager.getRepository<Entity>(relation.type);
+    const repository = entityManager.getRepository<Entity>(relation.type);
 
     let multi = relation.isOneToMany || relation.isManyToMany;
     const
@@ -294,7 +293,7 @@ export async function eagerLoad<Entity extends {
 
     const checkJoinedRelations = (relation: RelationMetadata, alias: string, relations: RelationDefinitions[]) => {
       const
-        meta = eagerDataSource.getMetadata(relation.type),
+        meta = entityManager.connection.getMetadata(relation.type),
         parsedRelations = parseRelations(relations);
 
       meta.relations.forEach((relation) => {
