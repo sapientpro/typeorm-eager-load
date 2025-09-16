@@ -123,7 +123,7 @@ function extractIds<Entity extends ObjectLiteral>(entities: Entity[], columnName
 export async function eagerLoad<Entity extends {
   [key: string]: any
 }>(entities: Entity[] | Entity | undefined | null, relations: RelationDefinitions, entityManager: EntityManager = eagerDataSource.createEntityManager(), entity?: any) {
-  if (!entities) return;
+  if (!entities?.length) return;
 
   entities = Array.isArray(entities) ? entities : [entities];
   if (entities.length === 0) return;
@@ -253,7 +253,12 @@ export async function eagerLoad<Entity extends {
         });
       builder.expressionMap.aliases = [outerAlias, ...aliases];
 
-      builder.andWhere(`(${columnNames.map(columnName => `${outerAlias.name}.${columnName}`).join(', ')}) IN (${entityIds.map(ids => `(${ids.join(',')})`).join(',')})`);
+      const params: Record<string, any> = {};
+      builder.andWhere(`(${columnNames.map(columnName => `${outerAlias.name}.${columnName}`).join(', ')}) IN (${entityIds.map((ids, idx1) => `(${ids.map((id, idx2) => {
+        const paramName = `eager_param_${idx1}_${idx2}`
+        params[paramName] = id;
+        return `:${paramName}`;
+      }).join(',')})`).join(',')})`, params);
 
       const preLateralBuilder = repository.createQueryBuilder(relationName)
         .select(`${relationName}.*`);
@@ -288,7 +293,12 @@ export async function eagerLoad<Entity extends {
 
     } else {
       entityIds = extractIds(filteredEntities, referencedColumnNames);
-      builder.andWhere(`(${fields.join(', ')}) IN (${entityIds.map(ids => `(${ids.join(',')})`).join(',')})`);
+      const params:Record<string, any> = {}
+      builder.andWhere(`(${fields.join(', ')}) IN (${entityIds.map((ids,idx1) => `(${ids.map((id,idx2)=>{
+        const paramName = `eager_param_${idx1}_${idx2}`
+        params[paramName] = id;
+        return `:${paramName}`;
+      }).join(',')})`).join(',')})`, params);
     }
 
     const checkJoinedRelations = (relation: RelationMetadata, alias: string, relations: RelationDefinitions[]) => {
