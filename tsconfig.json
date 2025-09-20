@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
+    "target": "ES2022",
     "module": "commonjs",
     "moduleResolution": "node",
     "declaration": true,
     "sourceMap": true,
-    "outDir": "dist",
+    "outDir": "./dist",
+    "baseUrl": "./src",
     "importHelpers": true,
     "stripInternal": true,
     "pretty": true,
@@ -20,14 +21,10 @@
     "skipLibCheck": true
   },
   "include": [
-    "sample",
-    "src",
-    "test"
+    "src"
   ],
   "exclude": [
-    "tmp",
-    "temp",
-    "build",
+    "dist",
     "node_modules"
   ]
 }

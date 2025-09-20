@@ -1,6 +1,6 @@
 {
   "name": "@sapientpro/typeorm-eager-load",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "TypeORM Eager Loader is a package that provides a simple way to optimize database queries by eagerly loading data based on defined relations",
   "license": "MIT",
   "readmeFilename": "README.md",
@@ -23,7 +23,7 @@
     "eager-load"
   ],
   "engines": {
-    "node": ">= 12.9.0"
+    "node": ">= 20.0.0"
   },
   "exports": {
     ".": {
@@ -38,12 +38,13 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "prepare": "npm run compile",
-    "compile": "rimraf ./dist && tsc",
-    "watch": "./node_modules/.bin/tsc -w",
+    "build": "tsc",
+    "compile": "rimraf ./dist && npm run build",
+    "watch": "tsc -w",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 2"
   },
   "devDependencies": {
-    "@types/node": "^18.13.0",
+    "@types/node": "^20.0.0",
     "conventional-changelog-angular": "^5.0.13",
     "conventional-changelog-cli": "^2.2.2",
     "rimraf": "^4.4.1",
@@ -54,7 +55,7 @@
     "tslib": "^2.5.0"
   },
   "peerDependencies": {
-    "typeorm": "^0.3.12 || ^0.2.29"
+    "typeorm": "^0.3.12"
   },
   "peerDependenciesMeta": {
     "typeorm": {
@@ -62,6 +63,7 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ]
 }
