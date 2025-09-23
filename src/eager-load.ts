@@ -11,7 +11,7 @@ import type { EagerContext, EagerLoadClosure, LateralCallback, RelationDefinitio
 export async function eagerLoad<Entity extends {
   [key: string]: any
 }>(entities: Entity[] | Entity | undefined | null, relations: RelationDefinitions, entityManager: EntityManager = getEagerDataSource().createEntityManager(), entity?: any) {
-  if (!entities?.length) return;
+  if (!entities) return;
 
   entities = Array.isArray(entities) ? entities : [entities];
   if (entities.length === 0) return;
